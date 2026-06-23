@@ -24,8 +24,17 @@ async function getSelectedValues(frame) {
     return frame.$$eval("select:not(#pjkc)", (selects) => selects.map((select) => select.value));
 }
 
-async function installGithubApiMock(page) {
+async function installOnlineLoaderMocks(page, mode) {
     await page.route("https://api.github.com/repos/zzemy/njupt-evaluation-helper/contents/evaluation-helper.js**", async (route) => {
+        if (mode === "online-loader-fallback") {
+            await route.fulfill({
+                status: 403,
+                contentType: "application/json",
+                body: JSON.stringify({ message: "API rate limit exceeded" })
+            });
+            return;
+        }
+
         await route.fulfill({
             status: 200,
             contentType: "application/json",
@@ -34,11 +43,19 @@ async function installGithubApiMock(page) {
             })
         });
     });
+
+    await page.route("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js**", async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: "text/javascript",
+            body: helperSource
+        });
+    });
 }
 
 async function injectHelper(page, mode) {
-    if (mode === "online-loader") {
-        await installGithubApiMock(page);
+    if (mode === "online-loader-api" || mode === "online-loader-fallback") {
+        await installOnlineLoaderMocks(page, mode);
         await page.evaluate(onlineLoaderSource);
         return;
     }
@@ -54,6 +71,10 @@ async function assertScenario(browser, type, expectedValues, mode) {
     });
 
     page.on("console", (message) => {
+        if (mode === "online-loader-fallback" && message.text().includes("403 (Forbidden)")) {
+            return;
+        }
+
         if (message.type() === "error") {
             console.error(`[${type}] console error: ${message.text()}`);
         }
@@ -126,8 +147,10 @@ async function assertScenario(browser, type, expectedValues, mode) {
     try {
         await assertScenario(browser, "course", ["A", "B"], "source");
         await assertScenario(browser, "teachingQuality", ["A", "B"], "source");
-        await assertScenario(browser, "course", ["A", "B"], "online-loader");
-        await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader");
+        await assertScenario(browser, "course", ["A", "B"], "online-loader-api");
+        await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader-api");
+        await assertScenario(browser, "course", ["A", "B"], "online-loader-fallback");
+        await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader-fallback");
         console.log("evaluation helper e2e passed");
     } finally {
         await browser.close();

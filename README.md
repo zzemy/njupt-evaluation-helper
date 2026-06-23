@@ -35,10 +35,10 @@ node .\tools\build-offline-bookmarklet.js
 如果离线书签被浏览器限制，或者临时在别人的电脑上使用，可以在控制台执行 `dist/evaluation-helper.online-loader.txt` 里的这一行：
 
 ```js
-fetch("https://api.github.com/repos/zzemy/njupt-evaluation-helper/contents/evaluation-helper.js?ref=main&t=" + Date.now(), { cache: "no-store" }).then(function (res) { return res.json(); }).then(function (file) { var binary = atob(file.content.replace(/\s/g, "")); var bytes = new Uint8Array(binary.length); for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); } (0, eval)(new TextDecoder("utf-8").decode(bytes)); });
+(function () { var stamp = Date.now(); function decodeBase64(value) { var binary = atob(value.replace(/\s/g, "")); var bytes = new Uint8Array(binary.length); for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); } return new TextDecoder("utf-8").decode(bytes); } function loadFromApi() { return fetch("https://api.github.com/repos/zzemy/njupt-evaluation-helper/contents/evaluation-helper.js?ref=main&t=" + stamp, { cache: "no-store" }).then(function (res) { if (!res.ok) { throw new Error("GitHub API HTTP " + res.status); } return res.json(); }).then(function (file) { if (!file || !file.content) { throw new Error("GitHub API did not return file content"); } return decodeBase64(file.content); }); } function loadText(url) { return fetch(url + "?t=" + stamp, { cache: "no-store" }).then(function (res) { if (!res.ok) { throw new Error(url + " HTTP " + res.status); } return res.text(); }); } loadFromApi().catch(function (error) { console.warn("GitHub API 加载失败，改用 raw fallback：", error); return loadText("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js"); }).catch(function (error) { console.warn("raw fallback 加载失败，改用 jsDelivr fallback：", error); return loadText("https://cdn.jsdelivr.net/gh/zzemy/njupt-evaluation-helper@main/evaluation-helper.js"); }).then(function (code) { (0, eval)(code); }).catch(function (error) { console.error("NJUPT Evaluation Helper 在线加载失败：", error); alert("评教助手在线加载失败，请改用离线书签或复制完整脚本。"); }); }());
 ```
 
-这条命令依赖 GitHub 访问。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。不要再使用 `raw.githubusercontent.com/main` 的旧加载方式，刚推送后它可能返回缓存旧版本。
+这条命令依赖 GitHub 访问，会依次尝试 GitHub API、raw、jsDelivr。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。
 
 ## 控制台完整脚本方式
 
