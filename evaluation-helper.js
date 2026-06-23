@@ -14,28 +14,10 @@
         }
     };
 
-    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v5";
+    var SCRIPT_VERSION = "2026-06-23.watchdog-v1";
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
-    var internalSetTimeout = window.setTimeout.bind(window);
-    var internalClearTimeout = window.clearTimeout.bind(window);
-
-    function scheduleInternalDelay(callback, delayMs) {
-        var cancelled = false;
-        var timeoutId = internalSetTimeout(function () {
-            if (cancelled) {
-                return;
-            }
-
-            callback();
-        }, delayMs);
-
-        return {
-            cancel: function () {
-                cancelled = true;
-                internalClearTimeout(timeoutId);
-            }
-        };
-    }
+    var internalSetInterval = window.setInterval.bind(window);
+    var internalClearInterval = window.clearInterval.bind(window);
 
     function removeDebuggerStatements(code) {
         return String(code).replace(/\bdebugger\s*;?/g, "");
@@ -401,11 +383,12 @@
 
         var autoSubmit = options.autoSubmit !== false;
         var leaveLastForManual = options.leaveLastForManual !== false;
-        var intervalMs = typeof options.intervalMs === "number" ? options.intervalMs : 1500;
+        var intervalMs = typeof options.intervalMs === "number" ? options.intervalMs : 500;
         var processed = 0;
         var totalCourses = null;
         var task = null;
         var stopped = false;
+        var lastSubmittedSignature = null;
 
         if (!autoSubmit) {
             fillCurrentPage(options, processed);
@@ -417,7 +400,7 @@
             stopped = true;
 
             if (task) {
-                task.cancel();
+                internalClearInterval(task);
             }
 
             if (message) {
@@ -425,74 +408,13 @@
             }
         }
 
-        function armNextPageContinuation(previousSignature) {
-            var iframe = getTargetIframe();
-            var observer = null;
-            var done = false;
-            var attempts = 0;
-
-            function cleanup() {
-                if (observer) {
-                    observer.disconnect();
-                }
-
-                if (iframe) {
-                    iframe.removeEventListener("load", onFrameLoad);
-                }
-            }
-
-            function continueOnce(reason) {
-                if (done || stopped) {
-                    return;
-                }
-
-                var currentDoc = getTargetDocument();
-                var currentSignature = getPageSignature(currentDoc);
-
-                if (currentSignature === previousSignature && reason !== "timeout") {
-                    return;
-                }
-
-                done = true;
-                cleanup();
-                console.log("检测到下一页加载：", reason);
-                step();
-            }
-
-            function onFrameLoad() {
-                continueOnce("iframe load");
-            }
-
-            function poll() {
-                if (done || stopped) {
-                    return;
-                }
-
-                attempts++;
-                continueOnce(attempts >= 50 ? "timeout" : "signature");
-
-                if (!done) {
-                    task = scheduleInternalDelay(poll, 100);
-                }
-            }
-
-            if (iframe) {
-                iframe.addEventListener("load", onFrameLoad);
-
-                if (typeof MutationObserver === "function") {
-                    observer = new MutationObserver(function () {
-                        continueOnce("iframe mutation");
-                    });
-                    observer.observe(iframe, { attributes: true, attributeFilter: ["src", "srcdoc"] });
-                }
-            }
-
-            poll();
-            return continueOnce;
-        }
-
         function step() {
             if (stopped) {
+                return;
+            }
+
+            var currentSignature = getPageSignature(getTargetDocument());
+            if (lastSubmittedSignature && currentSignature === lastSubmittedSignature) {
                 return;
             }
 
@@ -523,12 +445,10 @@
                 return;
             }
 
-            console.log("等待下一页加载，检测到页面切换后继续。");
-            var checkNextPage = armNextPageContinuation(result.signature);
+            lastSubmittedSignature = result.signature;
             button.click();
             processed++;
             console.log("自动提交进度：", processed, "/", leaveLastForManual ? totalCourses - 1 : totalCourses);
-            checkNextPage("after submit");
 
             if (!leaveLastForManual && processed >= totalCourses) {
                 stop("评价流程已结束。");
@@ -538,6 +458,11 @@
         }
 
         step();
+
+        if (!stopped) {
+            task = internalSetInterval(step, intervalMs);
+            console.log("已启动自动检查，每", intervalMs, "ms 检查一次页面状态。");
+        }
     }
 
     window.runNjuptEvaluation = runNjuptEvaluation;

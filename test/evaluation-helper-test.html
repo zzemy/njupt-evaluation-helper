@@ -199,7 +199,7 @@
                 "</style></head><body>",
                 "<h2>" + config.title + "</h2>",
                 "<p>当前课程：" + courses[currentCourseIndex] + "；教师数：" + teachers.length + "</p>",
-                "<label>课程选择 <select id='pjkc'>" + courseOptions + "</select></label>",
+                "<label>课程选择 <select id='pjkc' onchange='parent.handleMockCourseChange(this.selectedIndex)'>" + courseOptions + "</select></label>",
                 questions,
                 "<button id='Button1' type='button'>提交</button>",
                 "<script>",
@@ -221,6 +221,12 @@
             }
 
             log("已经到最后一门课。");
+        }
+
+        function handleMockCourseChange(index) {
+            currentCourseIndex = index;
+            renderMockPage();
+            log("已切换到：" + courses[currentCourseIndex]);
         }
 
         function loadMockPage(type) {
