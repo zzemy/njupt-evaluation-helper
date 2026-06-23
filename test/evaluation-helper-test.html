@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>NJUPT Evaluation Helper Test</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            color: #1f2933;
+            background: #f3f4f6;
+        }
+
+        header {
+            padding: 16px 20px;
+            color: #ffffff;
+            background: #1f4e79;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        button,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border: 1px solid #9ca3af;
+            border-radius: 4px;
+            padding: 8px 10px;
+            background: #ffffff;
+        }
+
+        button.primary {
+            color: #ffffff;
+            border-color: #1f4e79;
+            background: #1f4e79;
+        }
+
+        .panel {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px;
+            background: #ffffff;
+        }
+
+        .controls {
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 620px;
+            border: 1px solid #9ca3af;
+            background: #ffffff;
+        }
+
+        pre {
+            max-height: 220px;
+            overflow: auto;
+            margin: 0;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: #111827;
+            color: #f9fafb;
+            white-space: pre-wrap;
+        }
+
+        .hint {
+            line-height: 1.6;
+            color: #4b5563;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NJUPT Evaluation Helper Test</h1>
+    </header>
+    <main>
+        <section class="controls">
+            <div class="panel">
+                <h2>模拟场景</h2>
+                <div class="actions">
+                    <button class="primary" type="button" onclick="loadMockPage('course')">课程评价</button>
+                    <button class="primary" type="button" onclick="loadMockPage('teachingQuality')">教学质量评价</button>
+                </div>
+                <p class="hint">
+                    打开本页后，在控制台粘贴执行 <code>evaluation-helper.js</code>。
+                    默认应自动提交前两门课，并在第三门课填好后停下。
+                </p>
+            </div>
+            <div class="panel">
+                <h2>提交记录</h2>
+                <pre id="log"></pre>
+            </div>
+        </section>
+        <iframe id="iframeautoheight" name="iframeautoheight" title="mock evaluation page"></iframe>
+    </main>
+
+    <script>
+        var currentType = "course";
+        var currentCourseIndex = 0;
+        var courses = ["高等数学", "大学物理", "程序设计"];
+        var teachersByCourse = [
+            ["张老师", "李老师"],
+            ["王老师"],
+            ["赵老师", "钱老师"]
+        ];
+
+        function getConfig(type) {
+            if (type === "teachingQuality") {
+                return {
+                    title: "教学质量评价",
+                    best: "好",
+                    secondBest: "较好",
+                    other: "一般"
+                };
+            }
+
+            return {
+                title: "课程评价",
+                best: "完全认同",
+                secondBest: "相对认同",
+                other: "基本认同"
+            };
+        }
+
+        function log(message) {
+            var logNode = document.getElementById("log");
+            logNode.textContent += message + "\n";
+            logNode.scrollTop = logNode.scrollHeight;
+        }
+
+        function renderOptions(config) {
+            return [
+                "<option value=''>请选择</option>",
+                "<option value='A'>" + config.best + "</option>",
+                "<option value='B'>" + config.secondBest + "</option>",
+                "<option value='C'>" + config.other + "</option>"
+            ].join("");
+        }
+
+        function renderTeacherQuestions(config, teacher, teacherIndex) {
+            var html = "<fieldset><legend>" + teacher + "</legend>";
+
+            for (var i = 1; i <= 6; i++) {
+                html += [
+                    "<label>",
+                    "第 " + i + " 题 ",
+                    "<select name='teacher" + teacherIndex + "_q" + i + "'>",
+                    renderOptions(config),
+                    "</select>",
+                    "</label><br>"
+                ].join("");
+            }
+
+            return html + "</fieldset>";
+        }
+
+        function renderMockPage() {
+            var config = getConfig(currentType);
+            var teachers = teachersByCourse[currentCourseIndex];
+            var courseOptions = "";
+
+            for (var i = 0; i < courses.length; i++) {
+                courseOptions += "<option" + (i === currentCourseIndex ? " selected" : "") + ">" + courses[i] + "</option>";
+            }
+
+            var questions = "";
+            for (var j = 0; j < teachers.length; j++) {
+                questions += renderTeacherQuestions(config, teachers[j], j);
+            }
+
+            var html = [
+                "<!doctype html><html lang='zh-CN'><head><meta charset='utf-8'>",
+                "<style>",
+                "body{font-family:Arial,'Microsoft YaHei',sans-serif;padding:16px;color:#1f2933}",
+                "fieldset{margin:14px 0;padding:12px;border:1px solid #cbd5e1;border-radius:4px}",
+                "legend{font-weight:700}",
+                "label{display:block;margin:8px 0}",
+                "select{min-width:140px}",
+                "button{padding:8px 12px}",
+                "</style></head><body>",
+                "<h2>" + config.title + "</h2>",
+                "<p>当前课程：" + courses[currentCourseIndex] + "；教师数：" + teachers.length + "</p>",
+                "<label>课程选择 <select id='pjkc'>" + courseOptions + "</select></label>",
+                questions,
+                "<button id='Button1' type='button'>提交</button>",
+                "<script>",
+                "document.getElementById('Button1').onclick=function(){parent.handleMockSubmit();};",
+                "<\/script>",
+                "</body></html>"
+            ].join("");
+
+            document.getElementById("iframeautoheight").srcdoc = html;
+        }
+
+        function handleMockSubmit() {
+            log("已提交：" + getConfig(currentType).title + " / " + courses[currentCourseIndex]);
+
+            if (currentCourseIndex < courses.length - 1) {
+                currentCourseIndex++;
+                renderMockPage();
+                return;
+            }
+
+            log("已经到最后一门课。");
+        }
+
+        function loadMockPage(type) {
+            currentType = type;
+            currentCourseIndex = 0;
+            document.getElementById("log").textContent = "";
+            renderMockPage();
+            log("已加载：" + getConfig(type).title);
+        }
+
+        loadMockPage(currentType);
+    </script>
+</body>
+</html>

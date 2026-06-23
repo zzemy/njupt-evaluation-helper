@@ -50,6 +50,17 @@ runNjuptEvaluation({ type: "teachingQuality" })
 
 旧脚本 `course-evaluation.js` 和 `teaching-quality-evaluation.js` 仍然保留，可以继续按原来的方式复制执行。
 
+## 本地测试
+
+如果真实评教入口已经消失，可以用本地模拟页测试：
+
+1. 用浏览器打开 `test/evaluation-helper-test.html`。
+2. 选择“课程评价”或“教学质量评价”模拟场景。
+3. 打开开发者工具的 `Console`。
+4. 粘贴执行 `evaluation-helper.js` 的完整内容。
+
+默认应自动提交前两门课，并在第三门课填好后停下，等待手动提交。左侧“提交记录”会显示模拟提交进度。
+
 ## 注意事项
 
 - `evaluation-helper.js` 默认会自动提交前面的课程，但最后一页会停下，方便手动确认。
