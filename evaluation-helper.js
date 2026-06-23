@@ -16,6 +16,82 @@
 
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
 
+    function removeDebuggerStatements(code) {
+        return String(code).replace(/\bdebugger\s*;?/g, "");
+    }
+
+    function shouldBlockTimerHandler(handler) {
+        return typeof handler === "function" && /\bdebugger\b/.test(Function.prototype.toString.call(handler));
+    }
+
+    function installDebuggerGuard(targetWindow) {
+        targetWindow = targetWindow || window;
+
+        if (targetWindow.__njuptEvaluationDebuggerGuardInstalled) {
+            return;
+        }
+
+        targetWindow.__njuptEvaluationDebuggerGuardInstalled = true;
+
+        var nativeSetInterval = targetWindow.setInterval;
+        var nativeSetTimeout = targetWindow.setTimeout;
+        var nativeFunction = targetWindow.Function;
+        var nativeEval = targetWindow.eval;
+
+        targetWindow.setInterval = function (handler, timeout) {
+            if (shouldBlockTimerHandler(handler)) {
+                console.warn("已拦截包含 debugger 的 setInterval。");
+                return 0;
+            }
+
+            if (typeof handler === "string" && /\bdebugger\b/.test(handler)) {
+                arguments[0] = removeDebuggerStatements(handler);
+            }
+
+            return nativeSetInterval.apply(targetWindow, arguments);
+        };
+
+        targetWindow.setTimeout = function (handler, timeout) {
+            if (shouldBlockTimerHandler(handler)) {
+                console.warn("已拦截包含 debugger 的 setTimeout。");
+                return 0;
+            }
+
+            if (typeof handler === "string" && /\bdebugger\b/.test(handler)) {
+                arguments[0] = removeDebuggerStatements(handler);
+            }
+
+            return nativeSetTimeout.apply(targetWindow, arguments);
+        };
+
+        targetWindow.Function = function () {
+            if (arguments.length > 0) {
+                arguments[arguments.length - 1] = removeDebuggerStatements(arguments[arguments.length - 1]);
+            }
+
+            return nativeFunction.apply(this, arguments);
+        };
+        targetWindow.Function.prototype = nativeFunction.prototype;
+
+        targetWindow.eval = function (code) {
+            return nativeEval.call(targetWindow, removeDebuggerStatements(code));
+        };
+
+        console.log("已启用 debugger 防暂停保护。若页面已经暂停，请先按 F8 继续一次。");
+    }
+
+    function installDebuggerGuards() {
+        installDebuggerGuard(window);
+
+        for (var i = 0; i < window.frames.length; i++) {
+            try {
+                installDebuggerGuard(window.frames[i]);
+            } catch (error) {
+                console.warn("无法为 iframe 安装 debugger 防暂停保护。", error);
+            }
+        }
+    }
+
     function toArray(list) {
         return Array.prototype.slice.call(list);
     }
@@ -233,6 +309,10 @@
 
     function fillCurrentPage(options, round) {
         var doc = getTargetDocument();
+        if (doc.defaultView) {
+            installDebuggerGuard(doc.defaultView);
+        }
+
         var selects = toArray(doc.getElementsByTagName("select"));
         var config = detectPageType(selects, options.type);
 
@@ -347,5 +427,6 @@
     }
 
     window.runNjuptEvaluation = runNjuptEvaluation;
+    installDebuggerGuards();
     runNjuptEvaluation();
 })();
