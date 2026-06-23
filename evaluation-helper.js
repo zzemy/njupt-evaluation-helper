@@ -14,6 +14,7 @@
         }
     };
 
+    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v2";
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
     var internalSetTimeout = window.setTimeout.bind(window);
     var internalClearTimeout = window.clearTimeout.bind(window);
@@ -22,39 +23,77 @@
     var internalMessageChannel = window.MessageChannel;
 
     function scheduleInternalDelay(callback, delayMs) {
-        if (!internalRequestAnimationFrame || !internalCancelAnimationFrame) {
-            var timeoutId = internalSetTimeout(callback, delayMs);
-            return {
-                cancel: function () {
-                    internalClearTimeout(timeoutId);
-                }
-            };
-        }
-
         var startedAt = Date.now();
+        var timeoutId = null;
         var frameId = null;
+        var channel = null;
         var cancelled = false;
 
-        function tick() {
+        function finish() {
             if (cancelled) {
                 return;
             }
 
             if (Date.now() - startedAt >= delayMs) {
-                callback();
-                return;
-            }
+                cancelled = true;
 
-            frameId = internalRequestAnimationFrame(tick);
+                if (timeoutId !== null) {
+                    internalClearTimeout(timeoutId);
+                }
+
+                if (frameId !== null && internalCancelAnimationFrame) {
+                    internalCancelAnimationFrame(frameId);
+                }
+
+                if (channel) {
+                    channel.port1.onmessage = null;
+                    channel.port1.close();
+                    channel.port2.close();
+                }
+
+                callback();
+            }
         }
 
-        frameId = internalRequestAnimationFrame(tick);
+        function tickFrame() {
+            finish();
+            if (!cancelled && internalRequestAnimationFrame) {
+                frameId = internalRequestAnimationFrame(tickFrame);
+            }
+        }
+
+        function tickMessage() {
+            finish();
+            if (!cancelled && channel) {
+                channel.port2.postMessage(0);
+            }
+        }
+
+        timeoutId = internalSetTimeout(finish, delayMs);
+
+        if (internalRequestAnimationFrame) {
+            frameId = internalRequestAnimationFrame(tickFrame);
+        }
+
+        if (internalMessageChannel) {
+            channel = new internalMessageChannel();
+            channel.port1.onmessage = tickMessage;
+            channel.port2.postMessage(0);
+        }
 
         return {
             cancel: function () {
                 cancelled = true;
-                if (frameId !== null) {
+                if (timeoutId !== null) {
+                    internalClearTimeout(timeoutId);
+                }
+                if (frameId !== null && internalCancelAnimationFrame) {
                     internalCancelAnimationFrame(frameId);
+                }
+                if (channel) {
+                    channel.port1.onmessage = null;
+                    channel.port1.close();
+                    channel.port2.close();
                 }
             }
         };
@@ -455,6 +494,8 @@
 
     function runNjuptEvaluation(options) {
         options = options || {};
+
+        console.log("NJUPT Evaluation Helper", SCRIPT_VERSION);
 
         var autoSubmit = options.autoSubmit !== false;
         var leaveLastForManual = options.leaveLastForManual !== false;

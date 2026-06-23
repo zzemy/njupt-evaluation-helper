@@ -6,6 +6,7 @@ const { chromium } = require("playwright-core");
 const rootDir = path.resolve(__dirname, "..");
 const pageUrl = pathToFileURL(path.join(rootDir, "test", "evaluation-helper-test.html")).href;
 const helperSource = fs.readFileSync(path.join(rootDir, "evaluation-helper.js"), "utf8");
+const onlineLoaderSource = fs.readFileSync(path.join(rootDir, "dist", "evaluation-helper.online-loader.txt"), "utf8");
 const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 
 async function getFrame(page) {
@@ -23,7 +24,29 @@ async function getSelectedValues(frame) {
     return frame.$$eval("select:not(#pjkc)", (selects) => selects.map((select) => select.value));
 }
 
-async function assertScenario(browser, type, expectedValues) {
+async function installGithubApiMock(page) {
+    await page.route("https://api.github.com/repos/zzemy/njupt-evaluation-helper/contents/evaluation-helper.js**", async (route) => {
+        await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+                content: Buffer.from(helperSource, "utf8").toString("base64")
+            })
+        });
+    });
+}
+
+async function injectHelper(page, mode) {
+    if (mode === "online-loader") {
+        await installGithubApiMock(page);
+        await page.evaluate(onlineLoaderSource);
+        return;
+    }
+
+    await page.evaluate(helperSource);
+}
+
+async function assertScenario(browser, type, expectedValues, mode) {
     const page = await browser.newPage();
 
     page.on("pageerror", (error) => {
@@ -43,7 +66,7 @@ async function assertScenario(browser, type, expectedValues) {
         const doc = iframe && iframe.contentDocument;
         return Boolean(doc && doc.querySelectorAll("select:not(#pjkc)").length > 0);
     });
-    await page.evaluate(helperSource);
+    await injectHelper(page, mode);
 
     await page.waitForFunction(() => {
         const log = document.getElementById("log").textContent;
@@ -101,8 +124,10 @@ async function assertScenario(browser, type, expectedValues) {
     });
 
     try {
-        await assertScenario(browser, "course", ["A", "B"]);
-        await assertScenario(browser, "teachingQuality", ["A", "B"]);
+        await assertScenario(browser, "course", ["A", "B"], "source");
+        await assertScenario(browser, "teachingQuality", ["A", "B"], "source");
+        await assertScenario(browser, "course", ["A", "B"], "online-loader");
+        await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader");
         console.log("evaluation helper e2e passed");
     } finally {
         await browser.close();
