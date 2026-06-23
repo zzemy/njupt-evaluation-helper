@@ -15,6 +15,8 @@
     };
 
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
+    var internalSetTimeout = window.setTimeout.bind(window);
+    var internalClearTimeout = window.clearTimeout.bind(window);
 
     function removeDebuggerStatements(code) {
         return String(code).replace(/\bdebugger\s*;?/g, "");
@@ -370,7 +372,7 @@
             stopped = true;
 
             if (task) {
-                window.clearTimeout(task);
+                internalClearTimeout(task);
             }
 
             if (message) {
@@ -380,7 +382,7 @@
 
         function scheduleNextStep() {
             if (!stopped) {
-                task = window.setTimeout(step, intervalMs);
+                task = internalSetTimeout(step, intervalMs);
             }
         }
 
@@ -425,6 +427,7 @@
                 return;
             }
 
+            console.log("等待下一页加载，约", intervalMs, "ms 后继续。");
             scheduleNextStep();
         }
 
