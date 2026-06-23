@@ -12,6 +12,19 @@
 
 ## 推荐使用方式
 
+推荐使用 Tampermonkey / Violentmonkey，安装一次，每学期期末直接点页面右下角按钮即可：
+
+1. 安装 Tampermonkey 或 Violentmonkey 浏览器扩展。
+2. 打开 `njupt-evaluation-helper.user.js` 的 raw 地址：
+   <https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/njupt-evaluation-helper.user.js>
+3. 扩展会提示安装脚本，确认安装。
+4. 打开南邮教务评教页面，右下角会出现“评教助手”按钮。
+5. 点击按钮运行脚本。
+
+脚本不会进入页面就自动执行，只会显示按钮。点击按钮后，默认会自动填写并提交前面的课程，直到最后一页时停止。最后一页只会填写选项，请确认后手动提交。
+
+## 书签方式
+
 推荐保存成浏览器书签，后续在评教页面点一下书签即可运行：
 
 1. 打开 `dist/evaluation-helper.bookmarklet.txt`。
@@ -27,8 +40,6 @@
 ```js
 fetch("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js?t=" + Date.now()).then(function (res) { return res.text(); }).then(function (code) { (0, eval)(code); });
 ```
-
-默认会自动填写并提交前面的课程，直到最后一页时停止。最后一页只会填写选项，请确认后手动提交。
 
 ## 控制台完整脚本方式
 
