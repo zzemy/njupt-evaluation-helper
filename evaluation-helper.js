@@ -17,6 +17,47 @@
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
     var internalSetTimeout = window.setTimeout.bind(window);
     var internalClearTimeout = window.clearTimeout.bind(window);
+    var internalRequestAnimationFrame = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : null;
+    var internalCancelAnimationFrame = window.cancelAnimationFrame ? window.cancelAnimationFrame.bind(window) : null;
+
+    function scheduleInternalDelay(callback, delayMs) {
+        if (!internalRequestAnimationFrame || !internalCancelAnimationFrame) {
+            var timeoutId = internalSetTimeout(callback, delayMs);
+            return {
+                cancel: function () {
+                    internalClearTimeout(timeoutId);
+                }
+            };
+        }
+
+        var startedAt = Date.now();
+        var frameId = null;
+        var cancelled = false;
+
+        function tick() {
+            if (cancelled) {
+                return;
+            }
+
+            if (Date.now() - startedAt >= delayMs) {
+                callback();
+                return;
+            }
+
+            frameId = internalRequestAnimationFrame(tick);
+        }
+
+        frameId = internalRequestAnimationFrame(tick);
+
+        return {
+            cancel: function () {
+                cancelled = true;
+                if (frameId !== null) {
+                    internalCancelAnimationFrame(frameId);
+                }
+            }
+        };
+    }
 
     function removeDebuggerStatements(code) {
         return String(code).replace(/\bdebugger\s*;?/g, "");
@@ -372,7 +413,7 @@
             stopped = true;
 
             if (task) {
-                internalClearTimeout(task);
+                task.cancel();
             }
 
             if (message) {
@@ -382,7 +423,7 @@
 
         function scheduleNextStep() {
             if (!stopped) {
-                task = internalSetTimeout(step, intervalMs);
+                task = scheduleInternalDelay(step, intervalMs);
             }
         }
 
