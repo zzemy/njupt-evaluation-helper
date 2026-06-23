@@ -10,7 +10,17 @@
 
 脚本会跳过课程选择下拉框，只处理评价题目的下拉框。遇到一门课有多个老师时，会按题组生成不同的选项组合，避免多个老师的评价结果完全相同而无法提交。
 
-## 推荐使用方式
+## 最快使用方式
+
+打开评教页面后，按 `F12` 进入 `Console`，左上角执行上下文选 `top`，复制下面这一整行并执行：
+
+```js
+(function () { var stamp = Date.now(); function decodeBase64(value) { var binary = atob(value.replace(/\s/g, "")); var bytes = new Uint8Array(binary.length); for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); } return new TextDecoder("utf-8").decode(bytes); } function getHostWindow() { try { if (window.top && window.top.document) { if (window.top !== window) { console.log("当前控制台在 iframe 上下文，在线加载器将转到 top 页面运行。"); } return window.top; } } catch (error) {} return window; } function runCode(code) { var host = getHostWindow(); try { var script = host.document.createElement("script"); script.textContent = code + "\n//# sourceURL=njupt-evaluation-helper.js"; host.document.documentElement.appendChild(script); script.parentNode.removeChild(script); } catch (error) { host.eval(code); } } function loadFromApi() { return fetch("https://api.github.com/repos/zzemy/njupt-evaluation-helper/contents/evaluation-helper.js?ref=main&t=" + stamp, { cache: "no-store" }).then(function (res) { if (!res.ok) { throw new Error("GitHub API HTTP " + res.status); } return res.json(); }).then(function (file) { if (!file || !file.content) { throw new Error("GitHub API did not return file content"); } return decodeBase64(file.content); }); } function loadText(url) { return fetch(url + "?t=" + stamp, { cache: "no-store" }).then(function (res) { if (!res.ok) { throw new Error(url + " HTTP " + res.status); } return res.text(); }); } loadFromApi().catch(function (error) { console.warn("GitHub API 加载失败，改用 raw fallback：", error); return loadText("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js"); }).catch(function (error) { console.warn("raw fallback 加载失败，改用 jsDelivr fallback：", error); return loadText("https://cdn.jsdelivr.net/gh/zzemy/njupt-evaluation-helper@main/evaluation-helper.js"); }).then(function (code) { runCode(code); }).catch(function (error) { console.error("NJUPT Evaluation Helper 在线加载失败：", error); alert("评教助手在线加载失败，请改用离线书签或复制完整脚本。"); }); }());
+```
+
+这条命令会在线加载最新版脚本，依次尝试 GitHub API、raw、jsDelivr。如果误选了 `iframeautoheight`，新版脚本会尝试自动转到顶层页面运行；旧版 `fetch(...).then(eval)` 写法在 iframe 里执行时，可能只评价一门课就随着 iframe 刷新中断。
+
+## 长期使用方式
 
 最简约、最不依赖网络和浏览器扩展的方式是离线书签：
 
@@ -32,11 +42,7 @@ node .\tools\build-offline-bookmarklet.js
 
 ## 备用方式
 
-如果离线书签被浏览器限制，或者临时在别人的电脑上使用，可以复制 `dist/evaluation-helper.online-loader.txt` 里的整行代码，在控制台执行。
-
-执行前建议看一下 Console 左上角的执行上下文，下拉框选 `top` 最稳。如果误选了 `iframeautoheight`，新版脚本会尝试自动转到顶层页面运行；旧版 `fetch(...).then(eval)` 写法在 iframe 里执行时，可能只评价一门课就随着 iframe 刷新中断。
-
-这条命令依赖 GitHub 访问，会依次尝试 GitHub API、raw、jsDelivr。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。
+如果校园网访问 GitHub 不稳定，在线加载失败，可以改用离线书签，或者复制 `evaluation-helper.js` 的完整内容到控制台执行。
 
 ## 控制台完整脚本方式
 
