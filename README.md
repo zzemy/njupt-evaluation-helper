@@ -22,6 +22,8 @@
 
 这个方式不依赖油猴、GitHub 或 CDN。脚本更新后，需要重新打开新版 `install.html` 并重新拖一次书签。
 
+如果点击书签后控制台出现 `Invalid or unexpected token`，通常是旧版书签生成方式有问题。删除旧书签，重新打开新版 `install.html` 再拖一次即可。
+
 如果修改了 `evaluation-helper.js`，需要重新生成离线书签：
 
 ```powershell

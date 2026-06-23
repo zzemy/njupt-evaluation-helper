@@ -16,7 +16,16 @@ function escapeHtml(value) {
 }
 
 const source = fs.readFileSync(sourcePath, "utf8").replace(/^\uFEFF/, "");
-const bookmarklet = "javascript:(function(){eval(decodeURIComponent(\"" + encodeURIComponent(source) + "\"));}())";
+const base64Source = Buffer.from(source, "utf8").toString("base64");
+const bookmarklet = [
+    "javascript:(function(){",
+    "var b='", base64Source, "';",
+    "var s=atob(b);",
+    "var a=new Uint8Array(s.length);",
+    "for(var i=0;i<s.length;i++){a[i]=s.charCodeAt(i);}",
+    "eval(new TextDecoder('utf-8').decode(a));",
+    "}())"
+].join("");
 
 const html = `<!doctype html>
 <html lang="zh-CN">
