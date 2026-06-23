@@ -14,87 +14,25 @@
         }
     };
 
-    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v2";
+    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v3";
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
     var internalSetTimeout = window.setTimeout.bind(window);
     var internalClearTimeout = window.clearTimeout.bind(window);
-    var internalRequestAnimationFrame = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : null;
-    var internalCancelAnimationFrame = window.cancelAnimationFrame ? window.cancelAnimationFrame.bind(window) : null;
-    var internalMessageChannel = window.MessageChannel;
 
     function scheduleInternalDelay(callback, delayMs) {
-        var startedAt = Date.now();
-        var timeoutId = null;
-        var frameId = null;
-        var channel = null;
         var cancelled = false;
-
-        function finish() {
+        var timeoutId = internalSetTimeout(function () {
             if (cancelled) {
                 return;
             }
 
-            if (Date.now() - startedAt >= delayMs) {
-                cancelled = true;
-
-                if (timeoutId !== null) {
-                    internalClearTimeout(timeoutId);
-                }
-
-                if (frameId !== null && internalCancelAnimationFrame) {
-                    internalCancelAnimationFrame(frameId);
-                }
-
-                if (channel) {
-                    channel.port1.onmessage = null;
-                    channel.port1.close();
-                    channel.port2.close();
-                }
-
-                callback();
-            }
-        }
-
-        function tickFrame() {
-            finish();
-            if (!cancelled && internalRequestAnimationFrame) {
-                frameId = internalRequestAnimationFrame(tickFrame);
-            }
-        }
-
-        function tickMessage() {
-            finish();
-            if (!cancelled && channel) {
-                channel.port2.postMessage(0);
-            }
-        }
-
-        timeoutId = internalSetTimeout(finish, delayMs);
-
-        if (internalRequestAnimationFrame) {
-            frameId = internalRequestAnimationFrame(tickFrame);
-        }
-
-        if (internalMessageChannel) {
-            channel = new internalMessageChannel();
-            channel.port1.onmessage = tickMessage;
-            channel.port2.postMessage(0);
-        }
+            callback();
+        }, delayMs);
 
         return {
             cancel: function () {
                 cancelled = true;
-                if (timeoutId !== null) {
-                    internalClearTimeout(timeoutId);
-                }
-                if (frameId !== null && internalCancelAnimationFrame) {
-                    internalCancelAnimationFrame(frameId);
-                }
-                if (channel) {
-                    channel.port1.onmessage = null;
-                    channel.port1.close();
-                    channel.port2.close();
-                }
+                internalClearTimeout(timeoutId);
             }
         };
     }
@@ -177,46 +115,6 @@
 
     function toArray(list) {
         return Array.prototype.slice.call(list);
-    }
-
-    function scheduleInternalSoon(callback) {
-        var called = false;
-        var timeoutTask = null;
-        var frameTask = null;
-
-        function runOnce() {
-            if (called) {
-                return;
-            }
-
-            called = true;
-
-            if (timeoutTask !== null) {
-                internalClearTimeout(timeoutTask);
-            }
-
-            if (frameTask !== null && internalCancelAnimationFrame) {
-                internalCancelAnimationFrame(frameTask);
-            }
-
-            callback();
-        }
-
-        if (typeof Promise === "function") {
-            Promise.resolve().then(runOnce);
-        }
-
-        if (internalMessageChannel) {
-            var channel = new internalMessageChannel();
-            channel.port1.onmessage = runOnce;
-            channel.port2.postMessage(0);
-        }
-
-        timeoutTask = internalSetTimeout(runOnce, 80);
-
-        if (internalRequestAnimationFrame) {
-            frameTask = internalRequestAnimationFrame(runOnce);
-        }
     }
 
     function getTargetDocument() {
