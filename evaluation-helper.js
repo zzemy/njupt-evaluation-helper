@@ -14,7 +14,7 @@
         }
     };
 
-    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v4";
+    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v5";
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
     var internalSetTimeout = window.setTimeout.bind(window);
     var internalClearTimeout = window.clearTimeout.bind(window);
@@ -488,6 +488,7 @@
             }
 
             poll();
+            return continueOnce;
         }
 
         function step() {
@@ -523,11 +524,11 @@
             }
 
             console.log("等待下一页加载，检测到页面切换后继续。");
-            armNextPageContinuation(result.signature);
-
+            var checkNextPage = armNextPageContinuation(result.signature);
             button.click();
             processed++;
             console.log("自动提交进度：", processed, "/", leaveLastForManual ? totalCourses - 1 : totalCourses);
+            checkNextPage("after submit");
 
             if (!leaveLastForManual && processed >= totalCourses) {
                 stop("评价流程已结束。");
