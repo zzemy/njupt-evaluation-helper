@@ -19,12 +19,24 @@
 3. 进入 `Console`。
 4. 复制 `evaluation-helper.js` 的完整内容并粘贴执行。
 
-默认只会填写当前页面，不会自动提交。确认无误后可以手动提交。
+默认会自动填写并提交前面的课程，直到最后一页时停止。最后一页只会填写选项，请确认后手动提交。
 
-如果确认要自动提交全部课程，先执行完整脚本加载入口函数，然后运行：
+如果只想填写当前页面、不自动提交，可以把脚本最后一行的：
 
 ```js
-runNjuptEvaluation({ autoSubmit: true })
+runNjuptEvaluation();
+```
+
+改成：
+
+```js
+runNjuptEvaluation({ autoSubmit: false });
+```
+
+如果确认最后一页也要自动提交，可以把最后一行改成：
+
+```js
+runNjuptEvaluation({ leaveLastForManual: false });
 ```
 
 如果自动识别页面类型失败，可以手动指定：
@@ -38,7 +50,7 @@ runNjuptEvaluation({ type: "teachingQuality" })
 
 ## 注意事项
 
-- `evaluation-helper.js` 默认不自动提交，避免误操作。
+- `evaluation-helper.js` 默认会自动提交前面的课程，但最后一页会停下，方便手动确认。
 - `course-evaluation.js` 用于课程评价，不要和教学质量评价页面混用。
 - `teaching-quality-evaluation.js` 用于教学质量评价，不要和课程评价页面混用。
 - 如果页面结构发生变化，脚本可能需要调整。

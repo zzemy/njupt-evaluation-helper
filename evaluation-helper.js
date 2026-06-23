@@ -272,49 +272,78 @@
     function runNjuptEvaluation(options) {
         options = options || {};
 
-        var autoSubmit = options.autoSubmit === true;
+        var autoSubmit = options.autoSubmit !== false;
+        var leaveLastForManual = options.leaveLastForManual !== false;
         var intervalMs = typeof options.intervalMs === "number" ? options.intervalMs : 1200;
-        var round = 0;
+        var processed = 0;
+        var totalCourses = null;
+        var task = null;
+        var stopped = false;
 
         if (!autoSubmit) {
-            fillCurrentPage(options, round);
-            console.log("默认未自动提交。如需自动提交全部课程，请运行：runNjuptEvaluation({ autoSubmit: true })");
+            fillCurrentPage(options, processed);
+            console.log("已关闭自动提交。如需自动处理课程并在最后一页停下，请运行：runNjuptEvaluation()");
             return;
         }
 
-        var firstResult = fillCurrentPage(options, round);
-        if (!firstResult) {
-            return;
-        }
+        function stop(message) {
+            stopped = true;
 
-        var totalCourses = firstResult.courseCount;
-        var submitted = 0;
-
-        var task = window.setInterval(function () {
-            if (submitted >= totalCourses) {
+            if (task) {
                 window.clearInterval(task);
-                console.log("评价流程已结束。");
+            }
+
+            if (message) {
+                console.log(message);
+            }
+        }
+
+        function step() {
+            if (stopped) {
                 return;
             }
 
-            var result = submitted === 0 ? firstResult : fillCurrentPage(options, submitted);
+            if (!leaveLastForManual && totalCourses !== null && processed >= totalCourses) {
+                stop("评价流程已结束。");
+                return;
+            }
+
+            var result = fillCurrentPage(options, processed);
             if (!result) {
-                window.clearInterval(task);
-                console.warn("填写失败，已停止自动提交。");
+                stop("填写失败，已停止自动提交。");
+                return;
+            }
+
+            if (totalCourses === null) {
+                totalCourses = result.courseCount;
+                console.log("共识别到", totalCourses, "门课程。将自动提交前面的课程，最后一页保留手动提交。");
+            }
+
+            if (leaveLastForManual && processed >= totalCourses - 1) {
+                stop("最后一页已填写完成，请确认后手动提交。");
                 return;
             }
 
             var button = findSubmitButton(result.doc);
             if (!button) {
-                window.clearInterval(task);
-                console.warn("未找到提交按钮，已停止自动提交。");
+                stop("未找到提交按钮，已停止自动提交。");
                 return;
             }
 
-            submitted++;
             button.click();
-            console.log("自动提交进度：", submitted, "/", totalCourses);
-        }, intervalMs);
+            processed++;
+            console.log("自动提交进度：", processed, "/", leaveLastForManual ? totalCourses - 1 : totalCourses);
+
+            if (!leaveLastForManual && processed >= totalCourses) {
+                stop("评价流程已结束。");
+            }
+        }
+
+        step();
+
+        if (!stopped && totalCourses !== null && (!leaveLastForManual || processed < totalCourses - 1)) {
+            task = window.setInterval(step, intervalMs);
+        }
     }
 
     window.runNjuptEvaluation = runNjuptEvaluation;
