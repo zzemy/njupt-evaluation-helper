@@ -10,7 +10,27 @@
 
 脚本会跳过课程选择下拉框，只处理评价题目的下拉框。遇到一门课有多个老师时，会按题组生成不同的选项组合，避免多个老师的评价结果完全相同而无法提交。
 
-## 使用方式
+## 推荐使用方式
+
+推荐保存成浏览器书签，后续在评教页面点一下书签即可运行：
+
+1. 打开 `dist/evaluation-helper.bookmarklet.txt`。
+2. 复制里面以 `javascript:` 开头的完整内容。
+3. 新建一个浏览器书签，名称例如 `NJUPT 评教助手`。
+4. 把复制的内容粘贴到书签的网址 / URL 字段。
+5. 打开评教页面后，点击这个书签运行脚本。
+
+这个书签会从 GitHub CDN 加载最新版 `evaluation-helper.js`，以后脚本更新后通常不需要重新保存书签。
+
+如果书签加载失败，也可以在控制台执行这一行：
+
+```js
+fetch("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js?t=" + Date.now()).then(function (res) { return res.text(); }).then(function (code) { (0, eval)(code); });
+```
+
+默认会自动填写并提交前面的课程，直到最后一页时停止。最后一页只会填写选项，请确认后手动提交。
+
+## 控制台完整脚本方式
 
 推荐使用 `evaluation-helper.js`：
 
@@ -18,8 +38,6 @@
 2. 按 `F12` 打开浏览器开发者工具。
 3. 进入 `Console`。
 4. 复制 `evaluation-helper.js` 的完整内容并粘贴执行。
-
-默认会自动填写并提交前面的课程，直到最后一页时停止。最后一页只会填写选项，请确认后手动提交。
 
 `evaluation-helper.js` 内置了基础的 `debugger` 防暂停保护，会尽量拦截后续创建的反调试定时器和动态 `debugger` 代码。如果打开开发者工具时页面已经暂停，先按一次 `F8` 继续运行，再粘贴脚本执行。
 
