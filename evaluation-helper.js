@@ -19,6 +19,7 @@
     var internalClearTimeout = window.clearTimeout.bind(window);
     var internalRequestAnimationFrame = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : null;
     var internalCancelAnimationFrame = window.cancelAnimationFrame ? window.cancelAnimationFrame.bind(window) : null;
+    var internalMessageChannel = window.MessageChannel;
 
     function scheduleInternalDelay(callback, delayMs) {
         if (!internalRequestAnimationFrame || !internalCancelAnimationFrame) {
@@ -139,18 +140,58 @@
         return Array.prototype.slice.call(list);
     }
 
+    function scheduleInternalSoon(callback) {
+        var called = false;
+        var timeoutTask = null;
+        var frameTask = null;
+
+        function runOnce() {
+            if (called) {
+                return;
+            }
+
+            called = true;
+
+            if (timeoutTask !== null) {
+                internalClearTimeout(timeoutTask);
+            }
+
+            if (frameTask !== null && internalCancelAnimationFrame) {
+                internalCancelAnimationFrame(frameTask);
+            }
+
+            callback();
+        }
+
+        if (typeof Promise === "function") {
+            Promise.resolve().then(runOnce);
+        }
+
+        if (internalMessageChannel) {
+            var channel = new internalMessageChannel();
+            channel.port1.onmessage = runOnce;
+            channel.port2.postMessage(0);
+        }
+
+        timeoutTask = internalSetTimeout(runOnce, 80);
+
+        if (internalRequestAnimationFrame) {
+            frameTask = internalRequestAnimationFrame(runOnce);
+        }
+    }
+
     function getTargetDocument() {
+        var iframe = document.getElementById("iframeautoheight") || document.querySelector("iframe[name='iframeautoheight']");
+        if (iframe && iframe.contentDocument) {
+            return iframe.contentDocument;
+        }
+
         try {
             if (window.frames && window.frames["iframeautoheight"] && window.frames["iframeautoheight"].document) {
                 return window.frames["iframeautoheight"].document;
             }
         } catch (error) {
             console.warn("无法访问 iframeautoheight，将尝试使用当前页面 document。", error);
-        }
-
-        var iframe = document.getElementById("iframeautoheight") || document.querySelector("iframe[name='iframeautoheight']");
-        if (iframe && iframe.contentDocument) {
-            return iframe.contentDocument;
         }
 
         return document;
@@ -350,6 +391,25 @@
         return null;
     }
 
+    function getPageSignature(doc) {
+        var courseSelect = doc.getElementById("pjkc");
+        var courseValue = "";
+
+        if (courseSelect) {
+            courseValue = [
+                courseSelect.selectedIndex,
+                courseSelect.value,
+                courseSelect.options[courseSelect.selectedIndex] ? getOptionText(courseSelect.options[courseSelect.selectedIndex]) : ""
+            ].join("|");
+        }
+
+        return [
+            courseValue,
+            doc.getElementsByTagName("select").length,
+            (doc.body ? doc.body.innerText || doc.body.textContent || "" : "").replace(/\s+/g, "").slice(0, 120)
+        ].join("::");
+    }
+
     function fillCurrentPage(options, round) {
         var doc = getTargetDocument();
         if (doc.defaultView) {
@@ -376,6 +436,7 @@
         result.doc = doc;
         result.config = config;
         result.courseCount = courseSelect ? courseSelect.options.length : 1;
+        result.signature = getPageSignature(doc);
 
         console.log(
             "已填写",
@@ -427,6 +488,24 @@
             }
         }
 
+        function waitForNextPage(previousSignature, attempts) {
+            if (stopped) {
+                return;
+            }
+
+            var currentDoc = getTargetDocument();
+            var currentSignature = getPageSignature(currentDoc);
+
+            if (currentSignature !== previousSignature || attempts >= 40) {
+                step();
+                return;
+            }
+
+            task = scheduleInternalDelay(function () {
+                waitForNextPage(previousSignature, attempts + 1);
+            }, 100);
+        }
+
         function step() {
             if (stopped) {
                 return;
@@ -468,8 +547,8 @@
                 return;
             }
 
-            console.log("等待下一页加载，约", intervalMs, "ms 后继续。");
-            scheduleNextStep();
+            console.log("等待下一页加载，检测到页面切换后继续。");
+            waitForNextPage(result.signature, 0);
         }
 
         step();

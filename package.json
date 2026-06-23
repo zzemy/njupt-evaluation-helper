@@ -1,0 +1,8 @@
+{
+	"scripts": {
+		"test:e2e": "node test/evaluation-helper.e2e.js"
+	},
+	"devDependencies": {
+		"playwright-core": "^1.61.0"
+	}
+}

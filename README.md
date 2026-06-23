@@ -82,6 +82,15 @@ runNjuptEvaluation({ type: "teachingQuality" })
 
 如果真实评教入口已经消失，可以用本地模拟页测试：
 
+自动化测试：
+
+```powershell
+pnpm install
+pnpm test:e2e
+```
+
+手动测试：
+
 1. 用浏览器打开 `test/evaluation-helper-test.html`。
 2. 选择“课程评价”或“教学质量评价”模拟场景。
 3. 打开开发者工具的 `Console`。
