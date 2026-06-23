@@ -354,7 +354,7 @@
 
         var autoSubmit = options.autoSubmit !== false;
         var leaveLastForManual = options.leaveLastForManual !== false;
-        var intervalMs = typeof options.intervalMs === "number" ? options.intervalMs : 1200;
+        var intervalMs = typeof options.intervalMs === "number" ? options.intervalMs : 1500;
         var processed = 0;
         var totalCourses = null;
         var task = null;
@@ -370,11 +370,17 @@
             stopped = true;
 
             if (task) {
-                window.clearInterval(task);
+                window.clearTimeout(task);
             }
 
             if (message) {
                 console.log(message);
+            }
+        }
+
+        function scheduleNextStep() {
+            if (!stopped) {
+                task = window.setTimeout(step, intervalMs);
             }
         }
 
@@ -416,14 +422,13 @@
 
             if (!leaveLastForManual && processed >= totalCourses) {
                 stop("评价流程已结束。");
+                return;
             }
+
+            scheduleNextStep();
         }
 
         step();
-
-        if (!stopped && totalCourses !== null && (!leaveLastForManual || processed < totalCourses - 1)) {
-            task = window.setInterval(step, intervalMs);
-        }
     }
 
     window.runNjuptEvaluation = runNjuptEvaluation;
