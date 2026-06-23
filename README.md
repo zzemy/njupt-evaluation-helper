@@ -32,15 +32,11 @@ node .\tools\build-offline-bookmarklet.js
 
 ## 备用方式
 
-如果离线书签被浏览器限制，或者临时在别人的电脑上使用，可以在控制台执行 `dist/evaluation-helper.online-loader.txt` 里的这一行：
+如果离线书签被浏览器限制，或者临时在别人的电脑上使用，可以复制 `dist/evaluation-helper.online-loader.txt` 里的整行代码，在控制台执行。
 
-```js
-(function () { var stamp = Date.now(); function decodeBase64(value) { var binary = atob(value.replace(/\s/g, "")); var bytes = new Uint8Array(binary.length); for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); } return new TextDecoder("utf-8").decode(bytes); } function loadFromApi() { return fetch("https://api.github.com/repos/zzemy/njupt-evaluation-helper/contents/evaluation-helper.js?ref=main&t=" + stamp, { cache: "no-store" }).then(function (res) { if (!res.ok) { throw new Error("GitHub API HTTP " + res.status); } return res.json(); }).then(function (file) { if (!file || !file.content) { throw new Error("GitHub API did not return file content"); } return decodeBase64(file.content); }); } function loadText(url) { return fetch(url + "?t=" + stamp, { cache: "no-store" }).then(function (res) { if (!res.ok) { throw new Error(url + " HTTP " + res.status); } return res.text(); }); } loadFromApi().catch(function (error) { console.warn("GitHub API 加载失败，改用 raw fallback：", error); return loadText("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js"); }).catch(function (error) { console.warn("raw fallback 加载失败，改用 jsDelivr fallback：", error); return loadText("https://cdn.jsdelivr.net/gh/zzemy/njupt-evaluation-helper@main/evaluation-helper.js"); }).then(function (code) { (0, eval)(code); }).catch(function (error) { console.error("NJUPT Evaluation Helper 在线加载失败：", error); alert("评教助手在线加载失败，请改用离线书签或复制完整脚本。"); }); }());
-```
+执行前建议看一下 Console 左上角的执行上下文，下拉框选 `top` 最稳。如果误选了 `iframeautoheight`，新版脚本会尝试自动转到顶层页面运行；旧版 `fetch(...).then(eval)` 写法在 iframe 里执行时，可能只评价一门课就随着 iframe 刷新中断。
 
 这条命令依赖 GitHub 访问，会依次尝试 GitHub API、raw、jsDelivr。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。
-
-这条命令会把真正的脚本注入到顶层页面运行。即使 DevTools 控制台当前选中了 iframe 上下文，也不会因为 iframe 换页导致脚本中断。
 
 ## 控制台完整脚本方式
 
@@ -48,7 +44,7 @@ node .\tools\build-offline-bookmarklet.js
 
 1. 打开对应的评教页面。
 2. 按 `F12` 打开浏览器开发者工具。
-3. 进入 `Console`。
+3. 进入 `Console`，左上角执行上下文选 `top`。
 4. 复制 `evaluation-helper.js` 的完整内容并粘贴执行。
 
 `evaluation-helper.js` 内置了基础的 `debugger` 防暂停保护，会尽量拦截后续创建的反调试定时器和动态 `debugger` 代码。如果打开开发者工具时页面已经暂停，先按一次 `F8` 继续运行，再粘贴脚本执行。

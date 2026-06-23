@@ -77,9 +77,19 @@ const html = `<!doctype html>
             background: #ffffff;
         }
 
+        details {
+            margin-top: 20px;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: 700;
+        }
+
         textarea {
             width: 100%;
             min-height: 120px;
+            margin-top: 12px;
             box-sizing: border-box;
             font-family: Consolas, monospace;
             font-size: 12px;
@@ -89,15 +99,16 @@ const html = `<!doctype html>
 <body>
     <main>
         <h1>NJUPT 评教助手</h1>
-        <p>把下面的蓝色按钮拖到浏览器书签栏。以后打开评教页面，点击这个书签即可运行脚本。</p>
+        <p>把下面的蓝色按钮拖到浏览器书签栏。以后打开评教页面，点击这个书签即可运行脚本，不需要打开控制台。</p>
         <a class="install-link" href="${escapeHtml(bookmarklet)}">NJUPT 评教助手</a>
-        <div class="panel">
-            <p>如果不能拖拽，新建一个书签，把下面这一整段复制到书签的网址 / URL 字段。</p>
-            <textarea readonly>${escapeHtml(bookmarklet)}</textarea>
-        </div>
         <div class="panel">
             <p>这个安装页是离线版，不依赖油猴、GitHub 或 CDN。脚本更新后需要重新打开新版安装页并重新拖一次书签。</p>
         </div>
+        <details>
+            <summary>不能拖拽时展开备用安装方式</summary>
+            <p>新建一个书签，把下面这一整段复制到书签的网址 / URL 字段。</p>
+            <textarea readonly>${escapeHtml(bookmarklet)}</textarea>
+        </details>
     </main>
 </body>
 </html>

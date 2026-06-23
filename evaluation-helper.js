@@ -1,5 +1,20 @@
-(function () {
+(function njuptEvaluationHelperBootstrap() {
     "use strict";
+
+    if (window.top && window.top !== window) {
+        try {
+            if (window.top.document) {
+                var script = window.top.document.createElement("script");
+                script.textContent = "(" + njuptEvaluationHelperBootstrap.toString() + ")();\n//# sourceURL=njupt-evaluation-helper.js";
+                window.top.document.documentElement.appendChild(script);
+                script.parentNode.removeChild(script);
+                console.log("当前控制台在 iframe 上下文，已转到 top 页面运行。");
+                return;
+            }
+        } catch (error) {
+            console.warn("无法转到 top 页面运行，将在当前上下文继续。", error);
+        }
+    }
 
     var PAGE_TYPES = {
         course: {

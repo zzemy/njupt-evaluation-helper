@@ -67,6 +67,12 @@ async function injectHelper(page, mode) {
         return;
     }
 
+    if (mode === "direct-source-from-iframe") {
+        const frame = await getFrame(page);
+        await frame.evaluate(helperSource);
+        return;
+    }
+
     await page.evaluate(helperSource);
 }
 
@@ -160,6 +166,8 @@ async function assertScenario(browser, type, expectedValues, mode) {
         await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader-fallback");
         await assertScenario(browser, "course", ["A", "B"], "online-loader-from-iframe");
         await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader-from-iframe");
+        await assertScenario(browser, "course", ["A", "B"], "direct-source-from-iframe");
+        await assertScenario(browser, "teachingQuality", ["A", "B"], "direct-source-from-iframe");
         console.log("evaluation helper e2e passed");
     } finally {
         await browser.close();
