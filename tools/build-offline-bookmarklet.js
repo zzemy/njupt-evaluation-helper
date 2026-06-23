@@ -38,15 +38,15 @@ const html = `<!doctype html>
     <title>NJUPT 评教助手安装</title>
     <style>
         :root {
-            --page: #eef2f6;
-            --paper: #ffffff;
-            --ink: #17212f;
+            --page: #f6f8fa;
+            --card: #ffffff;
+            --ink: #172033;
             --muted: #66758a;
-            --line: #d9e1ea;
-            --brand: #20557f;
-            --brand-dark: #173f60;
-            --accent: #2f7d62;
-            --soft: #f7fafc;
+            --line: #dde5ee;
+            --soft: #f8fafc;
+            --brand: #205783;
+            --brand-dark: #174461;
+            --accent: #2e7a61;
         }
 
         * {
@@ -59,54 +59,36 @@ const html = `<!doctype html>
             font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
             color: var(--ink);
             background:
-                radial-gradient(circle at top left, rgba(47, 125, 98, 0.12), transparent 28rem),
-                linear-gradient(135deg, #f8fafc 0%, var(--page) 58%, #e7edf3 100%);
+                linear-gradient(180deg, #fbfcfd 0%, var(--page) 100%);
         }
 
         main {
-            width: min(920px, calc(100% - 40px));
+            width: min(760px, calc(100% - 32px));
             margin: 0 auto;
             padding: 56px 0;
         }
 
-        .shell {
-            border: 1px solid rgba(23, 33, 47, 0.1);
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.88);
-            box-shadow: 0 24px 70px rgba(36, 55, 78, 0.12);
-            overflow: hidden;
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--card);
+            box-shadow: 0 20px 54px rgba(31, 45, 61, 0.08);
         }
 
-        .hero {
-            display: grid;
-            grid-template-columns: 1.35fr 0.9fr;
-            gap: 32px;
-            padding: 38px;
-            align-items: center;
+        .intro {
+            padding: 42px 44px 22px;
         }
 
-        .eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 14px;
+        .kicker {
             color: var(--accent);
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
         }
 
-        .eyebrow::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            border-radius: 999px;
-            background: var(--accent);
-        }
-
         h1 {
-            margin: 0;
-            font-size: clamp(32px, 5vw, 54px);
-            line-height: 1.05;
+            margin: 14px 0 0;
+            font-size: clamp(34px, 7vw, 48px);
+            line-height: 1.15;
             letter-spacing: 0;
         }
 
@@ -116,24 +98,43 @@ const html = `<!doctype html>
         }
 
         .lead {
-            max-width: 620px;
-            margin-top: 18px;
+            margin-top: 14px;
             color: var(--muted);
             font-size: 17px;
         }
 
+        .install-box {
+            margin: 0 44px 30px;
+            padding: 24px;
+            border: 1px solid #c8d8e6;
+            border-radius: 12px;
+            background: var(--soft);
+            text-align: center;
+        }
+
+        .install-title {
+            font-size: 21px;
+            font-weight: 800;
+        }
+
         .install-link {
-            display: inline-block;
-            margin-top: 26px;
-            padding: 14px 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 18px;
+            min-width: 210px;
+            min-height: 56px;
+            padding: 16px 22px;
             border-radius: 8px;
             color: #ffffff;
             background: var(--brand);
-            box-shadow: 0 12px 28px rgba(32, 85, 127, 0.24);
+            box-shadow: 0 12px 24px rgba(32, 87, 131, 0.2);
             text-decoration: none;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 800;
             transition: transform 140ms ease, background 140ms ease, box-shadow 140ms ease;
             user-select: none;
+            cursor: grab;
         }
 
         .install-link:hover {
@@ -142,93 +143,65 @@ const html = `<!doctype html>
             transform: translateY(-1px);
         }
 
-        .browser-card {
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            background: var(--soft);
-            overflow: hidden;
+        .install-link:active {
+            cursor: grabbing;
         }
 
-        .browser-top {
-            display: flex;
-            gap: 7px;
-            padding: 13px 15px;
-            border-bottom: 1px solid var(--line);
-            background: #f1f5f9;
-        }
-
-        .browser-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: #b8c3cf;
-        }
-
-        .bookmark-bar {
-            padding: 18px;
-        }
-
-        .bookmark {
-            display: inline-block;
-            padding: 11px 13px;
-            border-radius: 8px;
-            color: #ffffff;
-            background: var(--brand);
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .hint {
-            margin-top: 14px;
+        .install-tip {
+            max-width: 520px;
+            margin: 16px auto 0;
             color: var(--muted);
-            font-size: 14px;
+            font-size: 15px;
         }
 
-        .steps {
+        .flow {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1px;
             border-top: 1px solid var(--line);
-            background: var(--line);
+            border-bottom: 1px solid var(--line);
         }
 
-        .step {
-            padding: 24px;
-            background: #ffffff;
+        .flow-item {
+            padding: 24px 26px;
+            border-right: 1px solid var(--line);
         }
 
-        .step-number {
+        .flow-item:last-child {
+            border-right: 0;
+        }
+
+        .number {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 30px;
-            height: 30px;
-            margin-bottom: 14px;
+            width: 28px;
+            height: 28px;
+            margin-bottom: 12px;
             border-radius: 999px;
             color: #ffffff;
             background: var(--accent);
             font-weight: 700;
         }
 
-        .step-title {
-            margin-bottom: 8px;
-            font-weight: 700;
+        .flow-title {
+            font-size: 17px;
+            font-weight: 800;
         }
 
-        .step-text {
+        .flow-text {
+            margin-top: 8px;
             color: var(--muted);
             font-size: 14px;
         }
 
         .panel {
-            padding: 24px;
-            border-top: 1px solid var(--line);
-            background: #fbfdff;
+            padding: 22px 44px;
             color: var(--muted);
+            background: #fbfcfd;
         }
 
         details {
-            padding: 0 24px 26px;
+            padding: 0 44px 34px;
             background: #fbfdff;
         }
 
@@ -236,6 +209,12 @@ const html = `<!doctype html>
             cursor: pointer;
             font-weight: 700;
             color: var(--ink);
+        }
+
+        details p {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 14px;
         }
 
         textarea {
@@ -255,66 +234,73 @@ const html = `<!doctype html>
 
         @media (max-width: 760px) {
             main {
-                width: min(100% - 24px, 920px);
-                padding: 24px 0;
+                width: min(100% - 20px, 760px);
+                padding: 18px 0;
             }
 
-            .hero {
+            .intro {
+                padding: 28px 24px 18px;
+            }
+
+            .install-box {
+                margin: 0 24px 24px;
+                padding: 22px 18px;
+            }
+
+            .flow {
                 grid-template-columns: 1fr;
-                padding: 26px;
             }
 
-            .steps {
-                grid-template-columns: 1fr;
-            }
-
-            .step {
+            .flow-item {
                 padding: 20px 24px;
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .flow-item:last-child {
+                border-bottom: 0;
+            }
+
+            .panel,
+            details {
+                padding-left: 24px;
+                padding-right: 24px;
             }
         }
     </style>
 </head>
 <body>
     <main>
-        <div class="shell">
-            <section class="hero">
-                <div>
-                    <div class="eyebrow">离线书签安装</div>
-                    <h1>NJUPT 评教助手</h1>
-                    <p class="lead">把按钮拖到浏览器书签栏。以后打开评教页面点一次书签即可运行，不需要打开控制台，也不依赖油猴、GitHub 或 CDN。</p>
-                    <a class="install-link" href="${escapeHtml(bookmarklet)}">NJUPT 评教助手</a>
-                </div>
-                <div class="browser-card" aria-hidden="true">
-                    <div class="browser-top">
-                        <span class="browser-dot"></span>
-                        <span class="browser-dot"></span>
-                        <span class="browser-dot"></span>
-                    </div>
-                    <div class="bookmark-bar">
-                        <span class="bookmark">NJUPT 评教助手</span>
-                        <p class="hint">拖到书签栏后保留这个小按钮。</p>
-                    </div>
-                </div>
+        <div class="card">
+            <section class="intro">
+                <div class="kicker">NJUPT 评教助手</div>
+                <h1>把按钮拖到书签栏</h1>
+                <p class="lead">安装一次即可。以后打开评教页面，点击书签栏里的按钮运行。</p>
             </section>
-            <section class="steps" aria-label="安装步骤">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-title">拖到书签栏</div>
-                    <p class="step-text">如果书签栏没显示，先按 Ctrl + Shift + B。</p>
+            <section class="install-box" aria-label="安装书签">
+                <div class="install-title">按住下面这个按钮，拖到浏览器顶部书签栏</div>
+                <a class="install-link" href="${escapeHtml(bookmarklet)}" onclick="alert('不要点击这个按钮。请按住它，拖到浏览器顶部的书签栏。'); return false;">NJUPT 评教助手</a>
+                <p class="install-tip">不要点击按钮；要按住拖动。书签栏没显示时，先按 Ctrl + Shift + B。</p>
+            </section>
+            <section class="flow" aria-label="使用步骤">
+                <div class="flow-item">
+                    <div class="number">1</div>
+                    <div class="flow-title">拖好书签</div>
+                    <p class="flow-text">书签栏里出现 NJUPT 评教助手。</p>
                 </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-title">打开评教页面</div>
-                    <p class="step-text">进入课程评价或教学质量评价页面。</p>
+                <div class="flow-item">
+                    <div class="number">2</div>
+                    <div class="flow-title">打开评教页面</div>
+                    <p class="flow-text">进入课程评价或教学质量评价。</p>
                 </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-title">点击书签运行</div>
-                    <p class="step-text">前面的课程自动提交，最后一页保留手动确认。</p>
+                <div class="flow-item">
+                    <div class="number">3</div>
+                    <div class="flow-title">点击书签运行</div>
+                    <p class="flow-text">前面的课程自动提交，最后一页手动确认。</p>
                 </div>
             </section>
             <div class="panel">
-                <p>脚本更新后，重新打开新版安装页并重新拖一次书签即可。</p>
+                <p>脚本更新后，重新打开新版安装页并重新拖一次书签。</p>
             </div>
             <details>
                 <summary>不能拖拽时展开备用安装方式</summary>
