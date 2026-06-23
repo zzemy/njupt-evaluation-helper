@@ -23,7 +23,10 @@ const bookmarklet = [
     "var s=atob(b);",
     "var a=new Uint8Array(s.length);",
     "for(var i=0;i<s.length;i++){a[i]=s.charCodeAt(i);}",
-    "eval(new TextDecoder('utf-8').decode(a));",
+    "var c=new TextDecoder('utf-8').decode(a);",
+    "var w=window;",
+    "try{if(window.top&&window.top.document){w=window.top;}}catch(e){}",
+    "try{var x=w.document.createElement('script');x.textContent=c+'\\n//# sourceURL=njupt-evaluation-helper.js';w.document.documentElement.appendChild(x);x.parentNode.removeChild(x);}catch(e){w.eval(c);}",
     "}())"
 ].join("");
 

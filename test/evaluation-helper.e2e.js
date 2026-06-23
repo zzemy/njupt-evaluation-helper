@@ -60,6 +60,13 @@ async function injectHelper(page, mode) {
         return;
     }
 
+    if (mode === "online-loader-from-iframe") {
+        await installOnlineLoaderMocks(page, "online-loader-api");
+        const frame = await getFrame(page);
+        await frame.evaluate(onlineLoaderSource);
+        return;
+    }
+
     await page.evaluate(helperSource);
 }
 
@@ -151,6 +158,8 @@ async function assertScenario(browser, type, expectedValues, mode) {
         await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader-api");
         await assertScenario(browser, "course", ["A", "B"], "online-loader-fallback");
         await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader-fallback");
+        await assertScenario(browser, "course", ["A", "B"], "online-loader-from-iframe");
+        await assertScenario(browser, "teachingQuality", ["A", "B"], "online-loader-from-iframe");
         console.log("evaluation helper e2e passed");
     } finally {
         await browser.close();

@@ -40,6 +40,8 @@ node .\tools\build-offline-bookmarklet.js
 
 这条命令依赖 GitHub 访问，会依次尝试 GitHub API、raw、jsDelivr。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。
 
+这条命令会把真正的脚本注入到顶层页面运行。即使 DevTools 控制台当前选中了 iframe 上下文，也不会因为 iframe 换页导致脚本中断。
+
 ## 控制台完整脚本方式
 
 推荐使用 `evaluation-helper.js`：
