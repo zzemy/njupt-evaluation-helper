@@ -14,7 +14,7 @@
         }
     };
 
-    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v3";
+    var SCRIPT_VERSION = "2026-06-23.iframe-wait-v4";
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
     var internalSetTimeout = window.setTimeout.bind(window);
     var internalClearTimeout = window.clearTimeout.bind(window);
@@ -117,8 +117,12 @@
         return Array.prototype.slice.call(list);
     }
 
+    function getTargetIframe() {
+        return document.getElementById("iframeautoheight") || document.querySelector("iframe[name='iframeautoheight']");
+    }
+
     function getTargetDocument() {
-        var iframe = document.getElementById("iframeautoheight") || document.querySelector("iframe[name='iframeautoheight']");
+        var iframe = getTargetIframe();
         if (iframe && iframe.contentDocument) {
             return iframe.contentDocument;
         }
@@ -421,28 +425,69 @@
             }
         }
 
-        function scheduleNextStep() {
-            if (!stopped) {
-                task = scheduleInternalDelay(step, intervalMs);
+        function armNextPageContinuation(previousSignature) {
+            var iframe = getTargetIframe();
+            var observer = null;
+            var done = false;
+            var attempts = 0;
+
+            function cleanup() {
+                if (observer) {
+                    observer.disconnect();
+                }
+
+                if (iframe) {
+                    iframe.removeEventListener("load", onFrameLoad);
+                }
             }
-        }
 
-        function waitForNextPage(previousSignature, attempts) {
-            if (stopped) {
-                return;
-            }
+            function continueOnce(reason) {
+                if (done || stopped) {
+                    return;
+                }
 
-            var currentDoc = getTargetDocument();
-            var currentSignature = getPageSignature(currentDoc);
+                var currentDoc = getTargetDocument();
+                var currentSignature = getPageSignature(currentDoc);
 
-            if (currentSignature !== previousSignature || attempts >= 40) {
+                if (currentSignature === previousSignature && reason !== "timeout") {
+                    return;
+                }
+
+                done = true;
+                cleanup();
+                console.log("检测到下一页加载：", reason);
                 step();
-                return;
             }
 
-            task = scheduleInternalDelay(function () {
-                waitForNextPage(previousSignature, attempts + 1);
-            }, 100);
+            function onFrameLoad() {
+                continueOnce("iframe load");
+            }
+
+            function poll() {
+                if (done || stopped) {
+                    return;
+                }
+
+                attempts++;
+                continueOnce(attempts >= 50 ? "timeout" : "signature");
+
+                if (!done) {
+                    task = scheduleInternalDelay(poll, 100);
+                }
+            }
+
+            if (iframe) {
+                iframe.addEventListener("load", onFrameLoad);
+
+                if (typeof MutationObserver === "function") {
+                    observer = new MutationObserver(function () {
+                        continueOnce("iframe mutation");
+                    });
+                    observer.observe(iframe, { attributes: true, attributeFilter: ["src", "srcdoc"] });
+                }
+            }
+
+            poll();
         }
 
         function step() {
@@ -477,6 +522,9 @@
                 return;
             }
 
+            console.log("等待下一页加载，检测到页面切换后继续。");
+            armNextPageContinuation(result.signature);
+
             button.click();
             processed++;
             console.log("自动提交进度：", processed, "/", leaveLastForManual ? totalCourses - 1 : totalCourses);
@@ -486,8 +534,6 @@
                 return;
             }
 
-            console.log("等待下一页加载，检测到页面切换后继续。");
-            waitForNextPage(result.signature, 0);
         }
 
         step();
