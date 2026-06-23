@@ -12,6 +12,24 @@
 
 ## 推荐使用方式
 
+最简约、最不依赖网络和浏览器扩展的方式是离线书签：
+
+1. 打开 `install.html`。
+2. 把页面里的 `NJUPT 评教助手` 蓝色按钮拖到浏览器书签栏。
+3. 以后打开评教页面，点击这个书签即可运行脚本。
+
+如果书签栏没显示，可以先按 `Ctrl + Shift + B` 显示书签栏。
+
+这个方式不依赖油猴、GitHub 或 CDN。脚本更新后，需要重新打开新版 `install.html` 并重新拖一次书签。
+
+如果修改了 `evaluation-helper.js`，需要重新生成离线书签：
+
+```powershell
+node .\tools\build-offline-bookmarklet.js
+```
+
+## 油猴方式
+
 推荐使用 Tampermonkey / Violentmonkey，安装一次，每学期期末直接点页面右下角按钮即可：
 
 1. 安装 Tampermonkey 或 Violentmonkey 浏览器扩展。
