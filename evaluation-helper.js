@@ -14,7 +14,7 @@
         }
     };
 
-    var SCRIPT_VERSION = "2026-06-23.watchdog-v1";
+    var SCRIPT_VERSION = "2026-06-23.watchdog-v2";
     var COMMON_QUESTION_COUNTS = [20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4];
     var internalSetInterval = window.setInterval.bind(window);
     var internalClearInterval = window.clearInterval.bind(window);
@@ -333,6 +333,11 @@
         ].join("::");
     }
 
+    function getCourseIndex(doc) {
+        var courseSelect = doc.getElementById("pjkc");
+        return courseSelect ? courseSelect.selectedIndex : -1;
+    }
+
     function fillCurrentPage(options, round) {
         var doc = getTargetDocument();
         if (doc.defaultView) {
@@ -413,8 +418,15 @@
                 return;
             }
 
-            var currentSignature = getPageSignature(getTargetDocument());
-            if (lastSubmittedSignature && currentSignature === lastSubmittedSignature) {
+            var currentDoc = getTargetDocument();
+            var currentCourseIndex = getCourseIndex(currentDoc);
+            var currentSignature = getPageSignature(currentDoc);
+
+            if (lastSubmittedSignature && currentCourseIndex !== -1 && currentCourseIndex < processed) {
+                return;
+            }
+
+            if (lastSubmittedSignature && currentCourseIndex === -1 && currentSignature === lastSubmittedSignature) {
                 return;
             }
 
