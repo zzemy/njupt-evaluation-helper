@@ -32,13 +32,13 @@ node .\tools\build-offline-bookmarklet.js
 
 ## 备用方式
 
-如果离线书签被浏览器限制，或者临时在别人的电脑上使用，可以在控制台执行这一行：
+如果离线书签被浏览器限制，或者临时在别人的电脑上使用，可以在控制台执行 `dist/evaluation-helper.online-loader.txt` 里的这一行：
 
 ```js
-fetch("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js?t=" + Date.now()).then(function (res) { return res.text(); }).then(function (code) { (0, eval)(code); });
+fetch("https://api.github.com/repos/zzemy/njupt-evaluation-helper/contents/evaluation-helper.js?ref=main&t=" + Date.now(), { cache: "no-store" }).then(function (res) { return res.json(); }).then(function (file) { var binary = atob(file.content.replace(/\s/g, "")); var bytes = new Uint8Array(binary.length); for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); } (0, eval)(new TextDecoder("utf-8").decode(bytes)); });
 ```
 
-这条命令依赖 GitHub 访问。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。
+这条命令依赖 GitHub 访问。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。不要再使用 `raw.githubusercontent.com/main` 的旧加载方式，刚推送后它可能返回缓存旧版本。
 
 ## 控制台完整脚本方式
 
