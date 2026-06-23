@@ -22,17 +22,19 @@
 
 ## 长期使用方式
 
-最简约、最不依赖网络和浏览器扩展的方式是离线书签：
+每学期期末反复用，推荐先装成离线书签：
 
-1. 打开 `install.html`。
+1. 打开在线安装页：<https://zzemy.github.io/njupt-evaluation-helper/>
 2. 把页面里的 `NJUPT 评教助手` 蓝色按钮拖到浏览器书签栏。
 3. 以后打开评教页面，点击这个书签即可运行脚本。
 
 如果书签栏没显示，可以先按 `Ctrl + Shift + B` 显示书签栏。
 
-这个方式不依赖油猴、GitHub 或 CDN。脚本更新后，需要重新打开新版 `install.html` 并重新拖一次书签。
+装好后的书签是离线内嵌脚本，不依赖油猴、GitHub 或 CDN。脚本更新后，需要重新打开新版安装页并重新拖一次书签。
 
-如果点击书签后控制台出现 `Invalid or unexpected token`，通常是旧版书签生成方式有问题。删除旧书签，重新打开新版 `install.html` 再拖一次即可。
+如果 GitHub Pages 打不开，也可以下载仓库里的 `install.html`，用浏览器本地打开后再拖书签。
+
+如果点击书签后控制台出现 `Invalid or unexpected token`，通常是旧版书签生成方式有问题。删除旧书签，重新打开新版安装页再拖一次即可。
 
 如果修改了 `evaluation-helper.js`，需要重新生成离线书签：
 

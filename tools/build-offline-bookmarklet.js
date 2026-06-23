@@ -4,8 +4,10 @@ const path = require("path");
 const rootDir = path.resolve(__dirname, "..");
 const sourcePath = path.join(rootDir, "evaluation-helper.js");
 const distDir = path.join(rootDir, "dist");
+const docsDir = path.join(rootDir, "docs");
 const bookmarkletPath = path.join(distDir, "evaluation-helper.offline-bookmarklet.txt");
 const installPath = path.join(rootDir, "install.html");
+const pagesInstallPath = path.join(docsDir, "index.html");
 
 function escapeHtml(value) {
     return value
@@ -314,8 +316,11 @@ const html = `<!doctype html>
 `;
 
 fs.mkdirSync(distDir, { recursive: true });
+fs.mkdirSync(docsDir, { recursive: true });
 fs.writeFileSync(bookmarkletPath, bookmarklet + "\n", "utf8");
 fs.writeFileSync(installPath, html, "utf8");
+fs.writeFileSync(pagesInstallPath, html, "utf8");
 
 console.log("Generated " + path.relative(rootDir, bookmarkletPath));
 console.log("Generated " + path.relative(rootDir, installPath));
+console.log("Generated " + path.relative(rootDir, pagesInstallPath));
