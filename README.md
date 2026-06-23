@@ -30,36 +30,15 @@
 node .\tools\build-offline-bookmarklet.js
 ```
 
-## 油猴方式
+## 备用方式
 
-推荐使用 Tampermonkey / Violentmonkey，安装一次，每学期期末直接点页面右下角按钮即可：
-
-1. 安装 Tampermonkey 或 Violentmonkey 浏览器扩展。
-2. 打开 `njupt-evaluation-helper.user.js` 的 raw 地址：
-   <https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/njupt-evaluation-helper.user.js>
-3. 扩展会提示安装脚本，确认安装。
-4. 打开南邮教务评教页面，右下角会出现“评教助手”按钮。
-5. 点击按钮运行脚本。
-
-脚本不会进入页面就自动执行，只会显示按钮。点击按钮后，默认会自动填写并提交前面的课程，直到最后一页时停止。最后一页只会填写选项，请确认后手动提交。
-
-## 书签方式
-
-推荐保存成浏览器书签，后续在评教页面点一下书签即可运行：
-
-1. 打开 `dist/evaluation-helper.bookmarklet.txt`。
-2. 复制里面以 `javascript:` 开头的完整内容。
-3. 新建一个浏览器书签，名称例如 `NJUPT 评教助手`。
-4. 把复制的内容粘贴到书签的网址 / URL 字段。
-5. 打开评教页面后，点击这个书签运行脚本。
-
-这个书签会从 GitHub CDN 加载最新版 `evaluation-helper.js`，以后脚本更新后通常不需要重新保存书签。
-
-如果书签加载失败，也可以在控制台执行这一行：
+如果离线书签被浏览器限制，或者临时在别人的电脑上使用，可以在控制台执行这一行：
 
 ```js
 fetch("https://raw.githubusercontent.com/zzemy/njupt-evaluation-helper/main/evaluation-helper.js?t=" + Date.now()).then(function (res) { return res.text(); }).then(function (code) { (0, eval)(code); });
 ```
+
+这条命令依赖 GitHub 访问。校园网访问 GitHub 不稳定时，使用离线书签或复制完整脚本更可靠。
 
 ## 控制台完整脚本方式
 
